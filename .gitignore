@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+
+# Test files
+*.ass
+*.srt
+*.vtt

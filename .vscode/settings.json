@@ -1,0 +1,12 @@
+{
+	"files.associations": {
+		"filesystem": "cpp",
+		"fstream": "cpp",
+		"xstring": "cpp",
+		"xiosbase": "cpp",
+		"regex": "cpp",
+		"ostream": "cpp",
+		"ios": "cpp",
+		"iostream": "cpp"
+	}
+}
