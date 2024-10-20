@@ -7,6 +7,15 @@
 		"regex": "cpp",
 		"ostream": "cpp",
 		"ios": "cpp",
-		"iostream": "cpp"
+		"iostream": "cpp",
+		"iosfwd": "cpp",
+		"string": "cpp",
+		"sstream": "cpp",
+		"cmath": "cpp",
+		"algorithm": "cpp",
+		"xlocale": "cpp",
+		"xutility": "cpp",
+		"vector": "cpp",
+		"iomanip": "cpp"
 	}
 }
