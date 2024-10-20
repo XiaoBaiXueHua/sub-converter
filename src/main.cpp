@@ -191,7 +191,7 @@ void ASStoVT()
 		int i{0};
 		while (getline(stmp, tmp2, ','))
 		{ // comma-separated
-			cout << i << ". " << tmp2 << "\t";
+			// cout << i << ". " << tmp2 << "\t";
 			lineInfo.push_back(tmp2);
 			i++;
 		}
@@ -267,7 +267,7 @@ void ASStoVT()
 		lineInfo.push_back(tmp2);
 		i++;
 	}
-	cout << endl;
+	// cout << endl;
 	vector<vector<string>> lines{}; // a vector for all the lines, so that later it can be iterated through and examined for timing things
 	const int formats = lineInfo.size();
 	cout << "there are " << formats << " items in the vector." << endl;
@@ -289,7 +289,7 @@ void ASStoVT()
 					lineInfo.push_back(tmp2);
 					i++;
 				} else {
-					lineInfo[formats - 1] += tmp2; //concatenate the dialogue lines even when they have commas :D
+					lineInfo[formats - 1] += "," + tmp2; //concatenate the dialogue lines even when they have commas :D ...and also add the commas back in lol
 				}
 			}
 
@@ -301,7 +301,9 @@ void ASStoVT()
 	for (int line{0}; line < lines.size(); line++) {
 		lineInfo = lines[line]; // i'm not setting aside more memory for a new vector. why would i do that.
 		ostr << lineInfo[1] << " --> " << lineInfo[2] << endl; // timing
-		ostr << lineInfo[9] << endl << endl; // text
+		tmp = regex_replace(lineInfo[9], regex("\\{.*\\}"), ""); // remove the in-line styling and positioning for now. results in a known bug where it completely deletes any in-line bolds and italics
+		tmp = regex_replace(tmp, regex("\\\\N"), "\n"); // the raw dialogue line but with the newlines replaced
+		ostr << "<v." << lineInfo[3] << (lineInfo[4] != "" ? " " + lineInfo[4] : "") << ">" << tmp << "</v>" << endl << endl; // text
 	}
 }
 
