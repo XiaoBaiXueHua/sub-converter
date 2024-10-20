@@ -196,7 +196,6 @@ void ASStoVT()
 			i++;
 		}
 		cout << endl;
-		stmp.clear();
 
 		float fontSize{0.0};
 		try
@@ -242,10 +241,10 @@ void ASStoVT()
 		{
 			cout << "This .ass file is improperly formatted." << endl;
 		}
+		lineInfo.clear();
+		stmp.clear();
 	}
 
-	lineInfo.clear();
-	stmp.clear();
 	int i{0}; // int to hold onto which sub-thing we're currently on
 	// move it along to the events
 	if (tmp != "[Events]")
