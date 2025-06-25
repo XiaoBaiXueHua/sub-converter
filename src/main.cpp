@@ -8,6 +8,7 @@
 #include <regex>
 #include <filesystem>
 #include "./subfiles/subtitle.h"
+#include "subfiles/subtitle.cpp"
 #include "subfiles/friends.h"
 #include "subfiles/friends.cpp"
 #include "subfiles/styler.h"
