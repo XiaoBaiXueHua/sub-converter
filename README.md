@@ -56,8 +56,82 @@ something important to note is that the first line of a series of kara-lines sho
 
 i haven't actually gotten around to programming in the alternate sources, but when i someday do you can have more than one in the csv as long as they're separated by a space
 
+## vtt output samples
+<details><summary>view [lyrics/comm/combined]</summary>
+
+### lyrics
+```vtt
+0:00:06.630 --> 0:00:11.370
+Her turn signal blinked to the East
+
+0:00:12.240 --> 0:00:15.730
+towards the long wooden pier
+
+0:00:15.730 --> 0:00:19.890
+that hangs over the beach.
+
+0:00:19.890 --> 0:00:22.440
+She took off her dress
+
+0:00:22.440 --> 0:00:26.100
+and she walked towards the sea
+
+0:00:26.100 --> 0:00:31.820
+And thought, <i>maybe it could sweep away me</i>...
+```
+### comm
+```vtt
+cue-16
+0:01:11.960 --> 0:01:14.320
+1. the rlshp btwn savior n damned is different from that btwn peers
+
+cue-17
+0:01:14.320 --> 0:01:15.300
+2. venti wants to be
+
+kara-cue-17-0
+0:01:15.300 --> 0:01:16.000
+2. venti wants to be <i>loved </i>
+
+kara-cue-17-1
+0:01:16.000 --> 0:01:16.470
+2. venti wants to be <i>loved as </i>
+
+kara-cue-17-2
+0:01:16.470 --> 0:01:16.900
+2. venti wants to be <i>loved as a </i>
+
+kara-cue-17-3
+0:01:16.900 --> 0:01:17.240
+2. venti wants to be <i>loved as a peer</i>!
+
+gap-1
+0:01:17.240 --> 0:01:21.040
+ 
+```
+- cues and gaps are numbered separately. karaoke numbering (as seen above) resets with every kara-group.
+### combined
+```vtt
+cue-Lyr30-Anno26
+0:01:43.850 --> 0:01:44.570
+<v Lyrics>♪♫ (<i>(I know that he loves me, I know that he loves me)</i>) ♫♪</v>
+<v echo>♪♫ (<i>(I, I...)</i>) ♫♪</v>
+truthfully, i have a hard time fully and succinctly articulating my vision for the ideal xv rlshp. like i'm not going to say there's no platonic explanation for what they have going on bc (again) i'm aro i can believe lots of things can be platonic.
+but also, i think that if they kissed abt their problems, it would fix smth abt both of them!
+
+cue-Lyr30-Anno26
+0:01:44.570 --> 0:01:47.480
+<v Lyrics>♪♫ (<i>(I know that he loves me, I know that he loves me (×2))</i>) ♫♪</v>
+truthfully, i have a hard time fully and succinctly articulating my vision for the ideal xv rlshp. like i'm not going to say there's no platonic explanation for what they have going on bc (again) i'm aro i can believe lots of things can be platonic.
+but also, i think that if they kissed abt their problems, it would fix smth abt both of them!
+```
+- the lyric and annotation numbering theoretically should go up as they change but it's not perfect. good enough for now though.
+</details>
+
 ### html output
-some parts of the html output are still hard-coded. expect configurable options uhhhh Someday. they are printed as seen below, albeit with the variables replaced.
+when `file-splitting=true`, the html will only print the annotations track. kara-line collections are also consolidated into one cue.
+
+many parts of the html output are still hard-coded. expect configurable options uhhhh Someday. they are printed as seen below, albeit with the variables replaced.
 
 #### structure
 ```html 

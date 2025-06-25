@@ -93,7 +93,7 @@ public:
 
 	bool empty();
 	void sanitize(); // cleans the dialogue of ass tags
-	string dialogue();
+	string dial();
 	friend ostream &operator<<(ostream &os, const cue &);
 	friend inline bool operator+=(const cue &, const cue &);
 	friend inline bool operator==(const cue &, const cue &);

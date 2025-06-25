@@ -243,7 +243,7 @@ void cue::sanitize()
 			utils::tmp2 = ""; // reset this
 			while (getline(steam, utils::tmp, '\\'))
 			{
-				cout << utils::tmp << endl;
+				// cout << utils::tmp << endl;
 				smatch smush;
 				if (regex_search(utils::tmp, smush, regex("(.*?)(<.*?>)(.*?)")))
 				{
@@ -280,7 +280,7 @@ void cue::sanitize()
 	}
 }
 
-string cue::dialogue() { return dialogue; } // stopgap solution before i eventually fix up the lines vector to work with cues n stuff instead
+string cue::dial() { return dialogue; } // stopgap solution before i eventually fix up the lines vector to work with cues n stuff instead
 
 // overloaded operator for cue
 ostream &operator<<(ostream &os, const cue &c)

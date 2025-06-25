@@ -562,7 +562,7 @@ void ASStoVTT(subtitle ass)
 		{
 			freminet = cue(subTime(lineInfo[1]), subTime(lineInfo[2]), lineInfo[3], lineInfo[8], lineInfo[9]);
 			freminet.sanitize(); // clean up the dialogue, as we're now just feeding it raw
-			lineInfo[9] = freminet.dialogue(); // temp fix before i change <lines> to hold cues instead of strings
+			lineInfo[9] = freminet.dial(); // temp fix before i change <lines> to hold cues instead of strings
 
 			times.insert(freminet.startTime);
 			times.insert(freminet.endTime);
