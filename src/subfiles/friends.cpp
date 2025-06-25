@@ -31,32 +31,6 @@ bool tf(string s)
 	}
 }
 
-// this is for parsing the ass colors and turning them into rgba
-int htod(string c)
-{ // takes strings of Exactly Two chars
-	int first{0}, second{0};
-	first = int(char(c[0])) - 48;
-	second = int(char(c[1])) - 48;
-	if (first > 10)
-	{
-		first = first - 8; // correct the ascii offset for the letters
-	}
-	if (second > 10)
-	{
-		second = second - 8; // correct the ascii offset for the letters
-	}
-	// cout << "first: " << first << "; second: " << second << ", (first * 16) + second = " << (first * 16) + second << endl;
-	return (first * 16) + second;
-}
-
-string rgba(string c)
-{
-	float alpha = htod(c.substr(2, 2));
-	int b{htod(c.substr(4, 2))}, g{htod(c.substr(6, 2))}, r{htod(c.substr(8, 2))};
-	string color{"rgba(" + to_string(1 - (round(100 * alpha) / 100)).substr(0, 4) + "," + to_string(r) + "," + to_string(g) + "," + to_string(b) + ")"};
-	return color;
-}
-
 void makeDir(string str)
 {
 	if (!filesystem::directory_entry(str).exists())
@@ -119,6 +93,14 @@ void config()
 				else if (meep[0] == "splitter-mode")
 				{
 					options::split = tf(meep[1]);
+				}
+				else if (meep[0] == "stylesheet")
+				{
+					options::style = tf(meep[1]);
+				}
+				else if (meep[0] == "style-borders")
+				{
+					options::styleBorders = tf(meep[1]);
 				}
 			}
 			// i++; // increment i for debugging
@@ -249,11 +231,11 @@ void configFanmix()
 	makeDir(options::output.string() + "/" + fanmixOpts::lyrDir.string());
 	makeDir(options::output.string() + "/" + fanmixOpts::commDir.string());
 	makeDir(options::output.string() + "/" + fanmixOpts::htmlDir.string());
-	if (fanmixOpts::combine) {
+	if (fanmixOpts::combine)
+	{
 		makeDir(options::output.string() + "/" + fanmixOpts::comboDir.string());
 	}
 }
-
 
 string outStrings(string folder, subtitle sub, string appendum, string prependum) // appendum then prependum bc there's more likely to be smth appended
 {
@@ -264,7 +246,8 @@ string outStrings(string folder, subtitle sub, string appendum, string prependum
 		t += options::output.string() + "/";
 	}
 
-	if (folder != "") {
+	if (folder != "")
+	{
 		t += folder + "/";
 	}
 
@@ -272,7 +255,7 @@ string outStrings(string folder, subtitle sub, string appendum, string prependum
 	{
 		t += prependum + "-";
 	}
-	
+
 	t += sub.name();
 
 	if (appendum != "")

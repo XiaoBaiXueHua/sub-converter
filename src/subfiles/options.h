@@ -17,7 +17,7 @@ class options
 public:
 	static filesystem::path directory, output; // directory for the subtitle files to be input
 	static filesystem::path csv; // optional csv for telling us which files to convert. how it's processed depends on the child converters
-	static bool csvMode, split;
+	static bool csvMode, split, style, styleBorders;
 };
 // now we set the defaults
 filesystem::path options::directory = "..";
@@ -25,6 +25,8 @@ filesystem::path options::output = "";
 filesystem::path options::csv = "tracklist.csv";
 bool options::csvMode = false;
 bool options::split = false;
+bool options::style = false;
+bool options::styleBorders = false; // these tend to be really big chunks, so it's off by default
 
 class fanmixOpts : options
 { // options for the fanmix stuff specifically

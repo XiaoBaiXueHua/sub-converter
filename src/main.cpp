@@ -7,14 +7,11 @@
 #include <sstream>
 #include <regex>
 #include <filesystem>
-#include <cstdarg>
 #include "./subfiles/subtitle.h"
 #include "subfiles/friends.h"
 #include "subfiles/friends.cpp"
-
-#ifndef PI
-#define PI 3.14159265358979 // can't seem to find out how to get a constant from a library in here so this will be good enough
-#endif						// ends def of pi
+#include "subfiles/styler.h"
+#include "subfiles/styler.cpp"
 
 using namespace std;
 
@@ -36,6 +33,7 @@ vector<string> lineInfo{};				   // a vector for strings
 pair<subTime, subTime> timestamps;
 cue freminet; // so. it's the pair of timestamps, the style, the effects, and the line string
 vector<cue> lyney, lynette;
+vector<stylesheet> styles{};
 
 int i{1}, j{0}, k{0}; // our beloved three random job integers
 int opt{0};
@@ -389,7 +387,7 @@ void ASStoVTT(subtitle ass)
 {
 	vector<string> htmlClasses{"cue", "timestamp"}; // the html classes vector has the cue divs and timestamp spans
 	lineInfo.clear();								// clear this out of whatever it had before
-	// freminet.clear();
+	styles.clear();
 
 	cout << "Now working with " << ass.name() << "." << ass.ext() << endl;
 	quickOpen(istr, ass.path()); // open the relevant subtitle file
@@ -404,7 +402,7 @@ void ASStoVTT(subtitle ass)
 		// quickOpen(cstr, string((options::output.string() != "" ? "/" : "") + options::output.string() + "/" + fanmixOpts::commDir.string() + "/" + ass.name() + "-comm.vtt")); // make the commentary track
 
 		quickOpen(cstr, string(outStrings(fanmixOpts::commDir.string(), ass, "comm") + ".vtt")); // hardcode for comm n html n stuff For Now
-		
+
 		cstr.clear(); // clear the output streams before we start writing
 		cstr << "WEBVTT\n\n\n";
 
@@ -420,7 +418,7 @@ void ASStoVTT(subtitle ass)
 			if (options::csvMode)
 			{
 				// if we're in csv mode, then we can also write the fallback youtube video
-				hstr << "\n\thi. it appears that your browser does not support playing video in html5. wild, considering this day and age. <br />however, you can still listen to this song <a href=\"" << ass.url() << "\">on youtube</a>!";
+				hstr << "\n\thi. it appears that your browser does not support playing video in html5. wild, considering this day and age. <br />however, you can still listen to this song <a href=" << quoted(ass.url()) << ">on youtube</a>!";
 			}
 			hstr << "\n\t<source src=\"" << fanmixOpts::mp3_host_url << (fanmixOpts::mp3_host_ext != "" ? "/" : "") << fanmixOpts::mp3_host_ext << "/"; // now we start writing the source
 			if (options::csvMode)
@@ -441,6 +439,33 @@ void ASStoVTT(subtitle ass)
 			hstr << "<details>\n\t<summary><h3 class=\"file-declaration\">WEBVTT</h3></summary>" << endl; // details n summary
 			hstr << "<p></p>" << endl;																	  // extra gap
 			hstr << "<div class=\"scrolly\">" << endl;													  // div for scrolling through the cues
+		}
+	}
+
+	if (options::style)
+	{
+		// so if we're supposed to print out the style
+		// fast forward to the styles
+		while (getline(istr, tmp))
+		{
+			if (tmp == "[V4+ Styles]")
+			{
+				cout << "Begin Styling." << endl;
+				break;
+			}
+		}
+		getline(istr, tmp); // get that extra line of formatting
+		while (getline(istr, tmp))
+		{
+			if (tmp == "[Events]" || !regex_search(tmp, regex("(\\w|\\d)+"))) // the second one looking for Literally Any Word Characters is important or else we get some sort of uncaught error when doing the stringstream
+			{
+				cout << "End of styles." << endl;
+				ostr << endl << endl << endl; // add in the extra gap lines
+				break; // leave when the events start or there's a blank line
+			}
+			stylesheet whee(tmp);
+			// ostr << whee << endl;
+			styles.push_back(whee);
 		}
 	}
 
@@ -749,6 +774,16 @@ void ASStoVTT(subtitle ass)
 		ostr << "WEBVTT\n\n\n";
 
 		karaMode = false;
+
+		if (options::style) {
+			ostr << "STYLE" << endl;
+			// loop through the stylesheet
+			for (auto const &s : styles) {
+				ostr << s << endl;
+			}
+			ostr << endl << endl << endl;
+		}
+
 		vector<subTime> timer;
 		timer.assign(times.begin(), times.end());
 		// what we should do. is we should alter freminet to be another cue vector, n he can hold the lyrics, while lynette holds the annotations, and then as we loop through the timer, we use i and j n stuff to basically track where we should start in the lyntwin vectors, and we first loop through the lyric vector to print the appearing lyrics, then we loop through the annotations vector to print the appearing annotations
