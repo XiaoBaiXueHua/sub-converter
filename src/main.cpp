@@ -50,6 +50,7 @@ void quickOpen(fstream &stream, filesystem::path path);
 void SRTtoVTT(subtitle);
 // void ASStoVTT();
 void ASStoVTT(subtitle);
+stringstream getLine(vector<cue> &, subTime, subTime, int &);
 void printLine(fstream &, vector<cue> &, subTime, subTime, int &);
 
 int main()
@@ -77,6 +78,7 @@ int main()
 					subfile = locator(toLower(soup.title()), soup.ext());
 					soup.setPath(subfile);
 					(toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup);
+					cout << endl;
 				}
 				catch (exception)
 				{
@@ -95,10 +97,12 @@ int main()
 				subfile = locator(tmp, soup.ext());
 				soup.setPath(subfile);
 				(toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup);
+				cout << endl;
 			}
-			catch (exception)
+			catch (exception &e)
 			{
 				cout << "whoops! couldn't find that file. :(" << endl;
+				cout << "(exception: " << e.what() << ")";
 				exit(69);
 			}
 		}
@@ -113,12 +117,14 @@ int main()
 			{
 				subtitle soup(f);
 				((toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup)); // then loop through everything
+				cout << endl;
 			}
 		}
 		else
 		{
 			subtitle soup(available[k - 1]);
 			((toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup)); // otherwise, only convert the one chosen
+			cout << endl;
 		}
 	}
 
@@ -383,7 +389,7 @@ void SRTtoVTT(subtitle srt)
 		}
 		if (tmpInt == currLine)
 		{
-			cout << "Line " << currLine << ".\n";
+			// cout << "Line " << currLine << ".\n";
 			timingLine = true; // if this current number is the same as what line we're supposed to be on, set this to true
 			currLine++;		   // and iterate this for the next loop
 		}
@@ -397,6 +403,9 @@ void SRTtoVTT(subtitle srt)
 			ostr << tmp << endl; // and then write the line to the file
 		}
 	}
+	// ah. forgot to close them.
+	istr.close();
+	ostr.close();
 }
 
 void ASStoVTT(subtitle ass)
@@ -409,9 +418,8 @@ void ASStoVTT(subtitle ass)
 	cout << "Now working with " << ass.name() << "." << ass.ext() << endl;
 	quickOpen(istr, ass.path()); // open the relevant subtitle file
 
-	// quickOpen(ostr, string((options::output != "" ? "/" : "") + options::output.string() + "/" + fanmixOpts::lyrDir.string() + "/" + ass.name() + ".vtt")); // make the output file
 	quickOpen(ostr, string(outStrings(options::split ? fanmixOpts::lyrDir.string() : "", ass) + ".vtt"));
-	ostr.clear();
+	ostr.clear(); // make the output file
 	ostr << "WEBVTT\n\n\n"; // write this at the top
 
 	if (options::split) // the only use for splitter mode at this point is for the fanmix stuff so yee
@@ -545,7 +553,6 @@ void ASStoVTT(subtitle ass)
 		{
 			(miscSwitch ? startTime : endTime) = lineInfo[(miscSwitch ? 1 : 2)];
 			miscSwitch = false; // switch this off lol
-								// cout << "startTime: " << startTime << " endTime: " << endTime << endl;
 		}
 		else if (!regex_search(tmp, regex("^Comment:\\s+"))) // ignore comments for now, though .vtt supports them
 		{
@@ -555,6 +562,7 @@ void ASStoVTT(subtitle ass)
 			// if we're not working with a totally empty line
 			if (tmp != " ")
 			{
+				// cout << tmp << endl;
 				// wretched regex learning: https://www.studyplan.dev/pro-cpp/regex-capture-groups
 				regex effects("\\{?\\\\(i|b|s|u)(\\d)\\}?");
 				// first we make the <i>, <b>, and <s> tags
@@ -565,9 +573,39 @@ void ASStoVTT(subtitle ass)
 					tmp = regex_replace(tmp, regex(tmp2), string("<" + string(miscSwitch ? "" : "/") + smidge[1].str() + ">"));
 				}
 
-				effects = regex("(\\{|\\})");
+				// okay. what if the way we tried to replace the excess bracket stuff if like
+				// effects = regex("((\\{)(([^<\\}]*?)(</?(i|b|s|u)>)+?([^<\\}]*?))+(\\}))"); // with this regex group, we get index 2, 4, and 8 to be deleted.
+				effects = regex("(\\{)(.*?)(\\})"); // you know what. just grisp the whole thing.
 				while (regex_search(tmp, smidge, effects))
 				{
+					// tmp2 = smidge[1].str(); // this represents the guts
+					// seeMatches(smidge);
+					stringstream steam(smidge[2].str());
+					int len = smidge[0].str().length(); // length of the string
+
+					string tmp3{""};
+					while (getline(steam, tmp2, '\\'))
+					{
+						cout << tmp2 << endl;
+						smatch smush;
+						if (regex_search(tmp2, smush, regex("(.*?)(<.*?>)(.*?)")))
+						{
+							// cout << "inline html: " << endl;
+							// seeMatches(smush);
+							tmp3 += smush[2].str();
+						}
+					}
+					// no regex necessary
+					long long unsigned int s{tmp.find(smidge[2].str())};
+					tmp = tmp.replace(s - 1, len, tmp3);
+					break;
+				}
+
+				effects = regex("(\\{|\\})");
+				// int r{0};
+				while (regex_search(tmp, smidge, effects))
+				{
+					// remove any leftover curly brackets
 					tmp = regex_replace(tmp, effects, ""); // WHATEVER!!!! JUST GET RID OF CURLY BRACKETS UNIVERSALLY I GUESS!!!!!!!
 				}
 
@@ -816,13 +854,39 @@ void ASStoVTT(subtitle ass)
 		{ // ts for timestamp lol
 			startCue = timer[ts];
 			endCue = timer[ts + 1];
-			ostr << "cue-Lyr" << i << "-Anno" << j << endl; // make an option to change these cue things at some point
-			ostr << startCue << " --> " << endCue << endl;
 			// lyney and the lyrics
-			printLine(ostr, lyney, startCue, endCue, i);
-			// lynette and the annotations
-			printLine(ostr, lynette, startCue, endCue, j);
-			ostr << endl;
+			if (fanmixOpts::gaps)
+			{
+				if (!fanmixOpts::combine)
+				{
+					ostr << "cue-Lyr" << i << "-Anno" << j << endl; // make an option to change these cue things at some point
+				}
+				// doing it like this will print the gaps unconditionally
+				ostr << startCue << " --> " << endCue << endl;
+				printLine(ostr, lyney, startCue, endCue, i);
+				// lynette and the annotations
+				printLine(ostr, lynette, startCue, endCue, j);
+				ostr << endl;
+			}
+			else // otherwise we have to test them
+			{
+				stringstream nyo, nah;
+				nyo = getLine(lyney, startCue, endCue, i);
+				nah = getLine(lynette, startCue, endCue, j);
+				if ((!nyo.str().empty() || !nah.str().empty()))
+				{
+					if (!fanmixOpts::combine)
+					{
+						ostr << "cue-Lyr" << i << "-Anno" << j << endl; // make an option to change these cue things at some point
+					}
+					// so if at least one of them has a string
+					ostr << startCue << " --> " << endCue << endl;
+					printLine(ostr, lyney, startCue, endCue, i);
+					// lynette and the annotations
+					printLine(ostr, lynette, startCue, endCue, j);
+					ostr << endl;
+				}
+			}
 		}
 
 		// clear these vectors
@@ -838,9 +902,35 @@ void ASStoVTT(subtitle ass)
 }
 
 // function for printing multiple overlapping lines as discrete combined cues
+stringstream getLine(vector<cue> &v, subTime s, subTime e, int &q)
+{
+	stringstream hoo;
+	for (int i = q; i < v.size(); i++)
+	{
+		const cue l = v[i];
+
+		if (l.startTime > e) // if the line we're looking at starts after this current one ends
+		{
+			break;
+		}
+
+		// "A" in this case is the current line (c)'s timestamps; it is indexed by int l
+		// "B" in this case is lynette[i]; it is indexed by int i
+		// to overlap lines moving forward means that A.start <= B.start < A.end; this happens when i >= l
+		// to overlap lines looking backward means that B.start < A.start && B.end > A.start; this happens when i < l
+		// if B.start > A.end, we have passed the overlap section and should break
+		if (btwnIU(s, make_pair(l.startTime, l.endTime)) || btwnUI(e, make_pair(l.startTime, l.endTime)))
+		{
+			if (l != "")
+			{
+				hoo << l << endl;
+			}
+		}
+	}
+	return hoo;
+}
 void printLine(fstream &stream, vector<cue> &v, subTime s, subTime e, int &q)
 {
-	// always uses cstr
 	for (int i = q; i < v.size(); i++)
 	{
 		const cue l = v[i];

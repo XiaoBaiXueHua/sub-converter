@@ -232,3 +232,22 @@ ostream &operator<<(ostream &os, const cue &c)
 	}
 	return os;
 }
+
+inline bool operator==(const cue &l, const cue &r) {
+	return (l.dialogue == r.dialogue);
+}
+inline bool operator==(const cue &l, const string &r) {
+	return (l.dialogue == r);
+}
+inline bool operator==(const string &l, const cue &r) {
+	return (r == l);
+}
+inline bool operator!=(const cue &l, const cue &r) {
+	return !(l == r);
+}
+inline bool operator!=(const cue&l, const string &r) {
+	return !(l == r);
+}
+inline bool operator!=(const string &l, const cue &r) {
+	return !(r == l);
+}

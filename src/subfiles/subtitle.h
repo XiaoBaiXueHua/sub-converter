@@ -92,7 +92,13 @@ public:
 	cue(subTime s, subTime e, string &st, string &f, string &d);
 
 	friend ostream &operator<<(ostream &os, const cue &);
-
+	friend inline bool operator+=(const cue &, const cue &);
+	friend inline bool operator==(const cue &, const cue &);
+	friend inline bool operator==(const cue &, const string &);
+	friend inline bool operator==(const string &, const cue &);
+	friend inline bool operator!=(const cue &, const cue &);
+	friend inline bool operator!=(const cue &, const string &);
+	friend inline bool operator!=(const string &, const cue &);
 	// friend class vector<cue>;
 	subTime startTime{0.0}, endTime{0.0}; // has to be public for comparison reasons
 

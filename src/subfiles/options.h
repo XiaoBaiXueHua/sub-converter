@@ -37,7 +37,7 @@ public:
 	static string lyricStr, karaStr; // lyric n karaoke identification
 	static filesystem::path lyrDir, commDir, htmlDir, comboDir; // folder names for the lyrics, commentary, and html directories
 	static string mp3_host_url, mp3_host_ext, sub_host_url, sub_host_ext; // optional strings for systematically printing where the mp3s/subtitles are hosted for the html mode. these will always have to be manually configured in the config file
-	static bool makeHTML, combine;
+	static bool makeHTML, combine, gaps;
 };
 // set the defaults
 string fanmixOpts::lyricStr = "Lyrics";
@@ -52,6 +52,7 @@ string fanmixOpts::sub_host_url = "";
 string fanmixOpts::sub_host_ext = "";
 bool fanmixOpts::makeHTML = true; 
 bool fanmixOpts::combine = false;
+bool fanmixOpts::gaps = false; // for those gaps in things
 
 class utils {
 	// utilities, basically

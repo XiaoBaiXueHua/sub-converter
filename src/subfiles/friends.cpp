@@ -226,6 +226,10 @@ void configFanmix()
 				{
 					fanmixOpts::makeHTML = tf(meep[1]);
 				}
+				else if (meep[0] == "keep-gaps")
+				{
+					fanmixOpts::gaps = tf(meep[1]);
+				}
 			}
 			// i++; // increment i for debugging
 		}
@@ -245,6 +249,17 @@ void configFanmix()
 	{
 		makeDir(options::output.string() + "/" + fanmixOpts::comboDir.string());
 	}
+}
+
+void seeMatches(smatch s)
+{
+	int i{0};
+	for (auto &m : s)
+	{
+		cout << i << ". " << m.str() << endl;
+		i++;
+	}
+	cout << endl;
 }
 
 string outStrings(string folder, subtitle sub, string appendum, string prependum) // appendum then prependum bc there's more likely to be smth appended
