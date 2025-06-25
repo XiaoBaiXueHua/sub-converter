@@ -1,4 +1,5 @@
 #include "options.h"
+#include "subtitle.h"
 using namespace std;
 
 string tupper(string s);

@@ -91,6 +91,9 @@ public:
 	cue() {}
 	cue(subTime s, subTime e, string &st, string &f, string &d);
 
+	bool empty();
+	void sanitize(); // cleans the dialogue of ass tags
+	string dialogue();
 	friend ostream &operator<<(ostream &os, const cue &);
 	friend inline bool operator+=(const cue &, const cue &);
 	friend inline bool operator==(const cue &, const cue &);

@@ -408,6 +408,10 @@ void SRTtoVTT(subtitle srt)
 	ostr.close();
 }
 
+// in the future, perhaps increase the number of allowed file splitting... maybe have a setting where the number is automatically determined by the number of styles present in the .ass file
+// we could have like a vector of fstreams? or something to that effect; maybe have a parent class which contains the filestream + stylesheet, so that we can override operators n stuff
+// that way, we could also have other settings, like whether we give the cues ids... perhaps they can also have their own html streams, in case those also want to be made separately?
+// that said, the way multiple files are currently handled is pretty delicate n requires the .ass files be formatted in a particular way for the timers to be correct... perhaps do smth more akin to how the combined files are done? though they ignore karaoke stuff a bit at this time o(--(
 void ASStoVTT(subtitle ass)
 {
 	options::filetype = "ass";
@@ -556,76 +560,15 @@ void ASStoVTT(subtitle ass)
 		}
 		else if (!regex_search(tmp, regex("^Comment:\\s+"))) // ignore comments for now, though .vtt supports them
 		{
-
-			// process the html before we pass it along
-			tmp = lineInfo[9]; // all right time to start working with the subtitle line itself
-			// if we're not working with a totally empty line
-			if (tmp != " ")
-			{
-				// wretched regex learning: https://www.studyplan.dev/pro-cpp/regex-capture-groups
-				regex effects("\\{?\\\\(i|b|s|u)(\\d)\\}?");
-				// first we make the <i>, <b>, and <s> tags
-				while (regex_search(tmp, smidge, effects))
-				{
-					tmp2 = "\\\\" + smidge[1].str() + smidge[2].str(); // tmp2 you need a job. if it doesn't work, add like. four more backslashes i guess
-					miscSwitch = stoi(smidge[2].str());
-					tmp = regex_replace(tmp, regex(tmp2), string("<" + string(miscSwitch ? "" : "/") + smidge[1].str() + ">"));
-				}
-
-				// okay. what if the way we tried to replace the excess bracket stuff if like
-				effects = regex("(\\{)(.*?)(\\})"); // you know what. just grisp the whole thing.
-				while (regex_search(tmp, smidge, effects))
-				{
-					// tmp2 = smidge[1].str(); // this represents the guts
-					// seeMatches(smidge);
-					stringstream steam(smidge[2].str());
-					int len = smidge[0].str().length(); // length of the string
-
-					string tmp3{""};
-					while (getline(steam, tmp2, '\\'))
-					{
-						cout << tmp2 << endl;
-						smatch smush;
-						if (regex_search(tmp2, smush, regex("(.*?)(<.*?>)(.*?)")))
-						{
-							// cout << "inline html: " << endl;
-							// seeMatches(smush);
-							tmp3 += smush[2].str();
-						}
-					}
-					// no regex necessary
-					long long unsigned int s{tmp.find(smidge[2].str())};
-					tmp = tmp.replace(s - 1, len, tmp3);
-					break;
-				}
-
-				effects = regex("(\\{|\\})");
-				// int r{0};
-				while (regex_search(tmp, smidge, effects))
-				{
-					// remove any leftover curly brackets
-					tmp = regex_replace(tmp, effects, ""); // WHATEVER!!!! JUST GET RID OF CURLY BRACKETS UNIVERSALLY I GUESS!!!!!!!
-				}
-
-				effects = regex("\\\\N");
-				while (regex_search(tmp, smidge, effects))
-				{
-					tmp = regex_replace(tmp, effects, "\n"); // now it's just the raw dialogue line but with the newlines replaced
-				}
-
-				if (fx != "" && (fx != fanmixOpts::karaStr || fx != "comm")) // there's a bug here when doing batches for some reason OH it's bc we're processing the html earlier now i see i see
-				{
-					tmp = "<v " + fx + ">" + tmp + "</v>"; // for now, just give the voice whatever effect is going on there, as long as it's not blank or karaoke lol
-				}
-			}
-			lineInfo[9] = tmp;
-			// freminet = cue(make_tuple(make_pair(subTime(lineInfo[1]), subTime(lineInfo[2])), lineInfo[3], lineInfo[8], lineInfo[9])); // the timestamps, the style, the effect, and then the line string
-
 			freminet = cue(subTime(lineInfo[1]), subTime(lineInfo[2]), lineInfo[3], lineInfo[8], lineInfo[9]);
+			freminet.sanitize(); // clean up the dialogue, as we're now just feeding it raw
+			lineInfo[9] = freminet.dialogue(); // temp fix before i change <lines> to hold cues instead of strings
+
 			times.insert(freminet.startTime);
 			times.insert(freminet.endTime);
-			lineInfo[3] == fanmixOpts::lyricStr ? lyney.push_back(freminet) : lynette.push_back(freminet); // lyney has lyrics; lynette has annotations
+			(lineInfo[3] == fanmixOpts::lyricStr) ? lyney.push_back(freminet) : lynette.push_back(freminet); // lyney has lyrics; lynette has annotations
 
+			// as <lines> is just a vector of strings
 			lines.push_back(lineInfo); // add the line to the vector
 		}
 	}
@@ -850,7 +793,7 @@ void ASStoVTT(subtitle ass)
 			startCue = timer[ts];
 			endCue = timer[ts + 1];
 			// lyney and the lyrics
-			if (fanmixOpts::gaps)
+			if (options::gaps)
 			{
 				if (!fanmixOpts::combine)
 				{
@@ -863,7 +806,7 @@ void ASStoVTT(subtitle ass)
 				printLine(ostr, lynette, startCue, endCue, j);
 				ostr << endl;
 			}
-			else // otherwise we have to test them
+			else // otherwise we have to test them. will have to optimize this at some point such that it only returns cues
 			{
 				stringstream nyo, nah;
 				nyo = getLine(lyney, startCue, endCue, i);

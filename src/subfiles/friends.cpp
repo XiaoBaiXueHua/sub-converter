@@ -85,7 +85,7 @@ void config()
 					// cout << "setting " << meep[0] << endl;
 					options::directory = meep[1];
 				}
-				else if (meep[0] == "sub-path")
+				else if (meep[0] == "output")
 				{
 					// cout << "setting " << meep[0] << endl;
 					options::output = meep[1];
@@ -109,6 +109,10 @@ void config()
 					{ // only accept ass, srt, or both
 						options::filetype = utils::tmp2;
 					};
+				}
+				else if (meep[0] == "keep-gaps")
+				{
+					options::gaps = tf(meep[1]);
 				}
 			}
 			// i++; // increment i for debugging
@@ -171,7 +175,7 @@ void configFanmix()
 					// cout << "setting " << meep[0] << endl;
 					options::directory = meep[1];
 				}
-				else if (meep[0] == "sub-path")
+				else if (meep[0] == "output")
 				{
 					// cout << "setting " << meep[0] << endl;
 					options::output = meep[1];
@@ -214,6 +218,9 @@ void configFanmix()
 				{
 					fanmixOpts::commDir = meep[1];
 				}
+				else if (meep[0] == "html-dir") {
+					fanmixOpts::htmlDir = meep[1];
+				}
 				else if (meep[0] == "combine-dir")
 				{
 					fanmixOpts::comboDir = meep[1];
@@ -228,7 +235,7 @@ void configFanmix()
 				}
 				else if (meep[0] == "keep-gaps")
 				{
-					fanmixOpts::gaps = tf(meep[1]);
+					options::gaps = tf(meep[1]);
 				}
 			}
 			// i++; // increment i for debugging
