@@ -562,7 +562,6 @@ void ASStoVTT(subtitle ass)
 			// if we're not working with a totally empty line
 			if (tmp != " ")
 			{
-				// cout << tmp << endl;
 				// wretched regex learning: https://www.studyplan.dev/pro-cpp/regex-capture-groups
 				regex effects("\\{?\\\\(i|b|s|u)(\\d)\\}?");
 				// first we make the <i>, <b>, and <s> tags
@@ -574,7 +573,6 @@ void ASStoVTT(subtitle ass)
 				}
 
 				// okay. what if the way we tried to replace the excess bracket stuff if like
-				// effects = regex("((\\{)(([^<\\}]*?)(</?(i|b|s|u)>)+?([^<\\}]*?))+(\\}))"); // with this regex group, we get index 2, 4, and 8 to be deleted.
 				effects = regex("(\\{)(.*?)(\\})"); // you know what. just grisp the whole thing.
 				while (regex_search(tmp, smidge, effects))
 				{
@@ -818,9 +816,6 @@ void ASStoVTT(subtitle ass)
 	ostr.close();
 	cstr.close();
 	hstr.close();
-
-	// quickOpen(cstr, string("/"))
-	// quickOpen(cstr, string((options::output.string() != "" ? "/" : "") + options::output.string() + "/" + fanmixOpts::commDir.string() + "/" + fanmixOpts::comboDir.string() + "/" + ass.name() + "-comm-ao3.vtt")); // make the commentary track
 
 	// now if we're Not Splitting and/or we want a combined file
 	if (!options::split || fanmixOpts::combine)
