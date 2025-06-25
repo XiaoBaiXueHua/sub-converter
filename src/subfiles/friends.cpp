@@ -102,6 +102,14 @@ void config()
 				{
 					options::styleBorders = tf(meep[1]);
 				}
+				else if (meep[0] == "filetype")
+				{
+					utils::tmp2 = meep[1];
+					if (utils::tmp2 != "ass" || utils::tmp2 != "srt" || utils::tmp2 != "all")
+					{ // only accept ass, srt, or both
+						options::filetype = utils::tmp2;
+					};
+				}
 			}
 			// i++; // increment i for debugging
 		}
@@ -224,6 +232,8 @@ void configFanmix()
 	}
 	strm.close();
 	strm.clear();
+
+	options::combine = fanmixOpts::combine; // keep this safe
 
 	// make the configured directories
 	// this is smth that should really only be done in the splitter mode, but ignore that for now

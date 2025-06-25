@@ -47,7 +47,7 @@ int csvInput(fstream &stream, string fname);
 filesystem::path locator(string fname, string ext);
 void quickOpen(fstream &stream, string path);
 void quickOpen(fstream &stream, filesystem::path path);
-void SRtoVT();
+void SRTtoVTT(subtitle);
 // void ASStoVTT();
 void ASStoVTT(subtitle);
 void printLine(fstream &, vector<cue> &, subTime, subTime, int &);
@@ -74,9 +74,9 @@ int main()
 				try
 				{
 					cout << "now searching for: " << soup.title() << endl;
-					subfile = locator(toLower(soup.title()), "ass");
+					subfile = locator(toLower(soup.title()), soup.ext());
 					soup.setPath(subfile);
-					ASStoVTT(soup);
+					(toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup);
 				}
 				catch (exception)
 				{
@@ -92,9 +92,9 @@ int main()
 			cout << "now searching for: " << soup.title() << endl;
 			try
 			{
-				subfile = locator(tmp, "ass");
+				subfile = locator(tmp, soup.ext());
 				soup.setPath(subfile);
-				ASStoVTT(soup);
+				(toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup);
 			}
 			catch (exception)
 			{
@@ -109,14 +109,16 @@ int main()
 		if (k == 0)
 		{
 			// if batch is chosen
-			for (auto &f : available)
+			for (auto &f : available) // this is a vector of filepaths
 			{
-				ASStoVTT(subtitle(f)); // then loop through everything
+				subtitle soup(f);
+				((toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup)); // then loop through everything
 			}
 		}
 		else
 		{
-			ASStoVTT(subtitle(available[k - 1])); // otherwise, only convert the one chosen
+			subtitle soup(available[k - 1]);
+			((toLower(soup.ext()) == "ass") ? ASStoVTT(soup) : SRTtoVTT(soup)); // otherwise, only convert the one chosen
 		}
 	}
 
@@ -126,7 +128,7 @@ int main()
 	return 0;
 }
 
-filesystem::path locator(string fname, string ext = "ass")
+filesystem::path locator(string fname, string ext = options::filetype)
 { // default look for an .ass file
 	bool found{false};
 	filesystem::path tmpath{""};
@@ -201,26 +203,33 @@ void showFiles()
 	}
 }
 
-void showFiles(string ext = "ass") // default are .ass files
+void showFiles(string ext) // default are .ass files
 {
-	i = 1; // set this to 1
-	cout << setw(15) << 0 << ".\tAll" << endl;
-	available.clear(); // clears the vector of available files
-	for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{directory}})
+	if (toLower(ext) == "all")
 	{
-		if (!dir_entry.is_directory())
+		showFiles();
+	}
+	else
+	{
+		i = 1; // set this to 1
+		cout << setw(15) << 0 << ".\tAll" << endl;
+		available.clear(); // clears the vector of available files
+		for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{directory}})
 		{
-			filesystem::path currPath{dir_entry.path()}; // turn it into a path object
-			// cout << "File type " << currPath.extension() << endl;
-			if (currPath.extension() == string("." + ext))
+			if (!dir_entry.is_directory())
 			{
-				if (currPath.has_parent_path())
+				filesystem::path currPath{dir_entry.path()}; // turn it into a path object
+				// cout << "File type " << currPath.extension() << endl;
+				if (currPath.extension() == string("." + ext))
 				{
-					if (!regex_search(currPath.parent_path().string(), regex("drafts"))) // ignore any drafts
+					if (currPath.has_parent_path())
 					{
-						cout << setw(15) << i << ". " << currPath << endl;
-						available.push_back(currPath);
-						i++;
+						if (!regex_search(currPath.parent_path().string(), regex("drafts"))) // ignore any drafts
+						{
+							cout << setw(15) << i << ". " << currPath << endl;
+							available.push_back(currPath);
+							i++;
+						}
 					}
 				}
 			}
@@ -260,8 +269,8 @@ int csvInput(fstream &stream, string fname)
 			}
 			else
 			{
-				cout << "damn. you hae NO csv files. pick an ass file instead: ";
-				showFiles("ass");
+				cout << "damn. you hae NO csv files. pick a file instead: ";
+				showFiles(options::filetype);
 				cout << "> ";
 				cin >> opt;
 			}
@@ -270,7 +279,7 @@ int csvInput(fstream &stream, string fname)
 		case 2:
 		{
 			cout << "\nFiles available for conversion:" << endl;
-			showFiles("ass");
+			showFiles(options::filetype);
 			break;
 		}
 		default:
@@ -278,7 +287,7 @@ int csvInput(fstream &stream, string fname)
 			cout << "hi. you can't do that. gonna show you all the existing ass files instead: " << endl;
 			// choice = 2; // set this for y'know, The Thing later
 			cout << "\nFiles available for conversion:" << endl;
-			showFiles("ass");
+			showFiles(options::filetype);
 		}
 		}
 	}
@@ -303,7 +312,7 @@ int csvInput(fstream &stream, string fname)
 				// cout << tmp2 << "\t";
 				if (i == 0)
 				{
-					lineInfo.push_back(string((j < 10) ? string("0" + to_string(j)) : to_string(j)));
+					lineInfo.push_back(string((j < 10) ? string("0" + to_string(j)) : to_string(j))); // adds in the track number for the thing
 					cout << setw(7) << j << ". " << tmp2 << endl;
 					j++;
 				}
@@ -340,10 +349,16 @@ int csvInput(fstream &stream, string fname)
 	return opt;
 }
 
-void SRtoVT()
+void SRTtoVTT(subtitle srt)
 {
+	options::filetype = "srt";
 	bool timingLine{false};		// boolean for whether the following line has the timing in it
 	int currLine{1}, tmpInt{0}; // integer for the current line in the .srt file, as well as a temp for checking if we're currently
+
+	quickOpen(istr, srt.path());
+	quickOpen(ostr, string(outStrings(options::split ? fanmixOpts::lyrDir.string() : "", srt) + ".vtt"));
+	ostr.clear();
+	ostr << "WEBVTT\n\n\n"; // write this at the top
 	while (getline(istr, tmp))
 	{
 		try
@@ -386,6 +401,7 @@ void SRtoVT()
 
 void ASStoVTT(subtitle ass)
 {
+	options::filetype = "ass";
 	vector<string> htmlClasses{"cue", "timestamp"}; // the html classes vector has the cue divs and timestamp spans
 	lineInfo.clear();								// clear this out of whatever it had before
 	styles.clear();
@@ -461,8 +477,10 @@ void ASStoVTT(subtitle ass)
 			if (tmp == "[Events]" || !regex_search(tmp, regex("(\\w|\\d)+"))) // the second one looking for Literally Any Word Characters is important or else we get some sort of uncaught error when doing the stringstream
 			{
 				cout << "End of styles." << endl;
-				ostr << endl << endl << endl; // add in the extra gap lines
-				break; // leave when the events start or there's a blank line
+				ostr << endl
+					 << endl
+					 << endl; // add in the extra gap lines
+				break;		  // leave when the events start or there's a blank line
 			}
 			stylesheet whee(tmp);
 			// ostr << whee << endl;
@@ -776,13 +794,17 @@ void ASStoVTT(subtitle ass)
 
 		karaMode = false;
 
-		if (options::style) {
+		if (options::style)
+		{
 			ostr << "STYLE" << endl;
 			// loop through the stylesheet
-			for (auto const &s : styles) {
+			for (auto const &s : styles)
+			{
 				ostr << s << endl;
 			}
-			ostr << endl << endl << endl;
+			ostr << endl
+				 << endl
+				 << endl;
 		}
 
 		vector<subTime> timer;
@@ -809,7 +831,7 @@ void ASStoVTT(subtitle ass)
 		// close the outstream
 		ostr.close();
 	}
-
+	fanmixOpts::combine = options::combine; // reset this
 	// quickOpen(cstr, string(outStrings(fanmixOpts::comboDir.string(), ass, "comm-ao3") + ".vtt"));
 
 	cout << "Complete." << endl;

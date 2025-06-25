@@ -1,4 +1,6 @@
+#include <string>
 #include "subtitle.h"
+#include "friends.h"
 
 using namespace std;
 
@@ -22,11 +24,30 @@ subtitle::subtitle(filesystem::path file)
 }
 subtitle::subtitle(vector<string> &csv) // this version of the constructor requires you to locate the path in the main
 {
+	m = csv.size();
 	trackNum = csv[0];
 	t = csv[1];
 	a = csv[2];
 	u = csv[3];
 	n = toLower(pathify(t));
+	// those are the mandatory csv values
+	if (m > 3)
+	{
+		// do something with all the alternate urls... probably separated by spaces?
+		if (m > 4)
+		{
+			// lets us know if we're going to have a separate combined file
+			utils::tmp = toLower(csv[5]);
+			// c = (toLower(csv[5]) == "combined");
+			if (utils::tmp != "null") {
+				c = (utils::tmp == "combined");
+			}
+			if (m > 5) {
+				// then we're getting into setting the extension
+				e = csv[6];
+			}
+		}
+	}
 }
 
 string subtitle::name() { return n; }
@@ -36,8 +57,23 @@ string subtitle::title() { return t; }
 string subtitle::track() { return trackNum; }
 string subtitle::artist() { return a; }
 string subtitle::url() { return u; }
-void subtitle::setPath(filesystem::path pith) { p = pith; }
-void subtitle::setPath(string pith) { p = filesystem::path(pith); }
+bool subtitle::combined() { return c; }
+void subtitle::setPath(filesystem::path pith)
+{
+	if (options::csvMode && (m > 4)) {
+		// csvMode overrides the static options
+		fanmixOpts::combine = c;
+	}
+	p = pith;
+}
+void subtitle::setPath(string pith)
+{
+	if (options::csvMode && (m > 4)) {
+		// csvMode overrides the static options
+		fanmixOpts::combine = c;
+	}
+	p = filesystem::path(pith);
+}
 string subtitle::pathify(string str)
 {
 	return regex_replace(regex_replace(str, regex("\\s+"), "-"), regex("'"), "");
@@ -51,13 +87,21 @@ string subtitle::pathify(filesystem::path file)
 subTime::subTime(string t)
 {
 
-	regex nums("(\\d{1,2}):(\\d{2}):(\\d{2}\\.\\d{2})");
+	regex nums("(\\d{1,2}):(\\d{2}):(\\d{2}(\\.|,)\\d{2,3})");
 	// smatch smodge;
 	sregex_iterator shoof{t.begin(), t.end(), nums};
 
 	hour = stoi((*shoof)[1]); // they should always be like this
 	minute = stoi((*shoof)[2]);
-	second = stof((*shoof)[3]);
+	// second = stof(string((*shoof)[3]).replace(2, 1, "."));
+	// cout <<
+	string tmps = (*shoof)[3];
+	// cout << tmps << endl;
+	if (options::filetype == "srt")
+	{
+		tmps = tmps.replace(2, 1, "."); // srt files get their commas replaced
+	}
+	second = stof(tmps);
 	// cout << "hour: " << hour << ", minute: " << minute << ", second: " << second << endl;
 
 	duration = second + (minute * 60) + (hour * 60 * 60); // duration is in seconds, as a float
@@ -165,10 +209,12 @@ ostream &operator<<(ostream &os, const cue &c)
 {
 	// we'll have to make an options/settings static class for this later but for now just whatever hardcode it
 	string voice{c.fx};
-	if (voice == "" && c.style == fanmixOpts::lyricStr) {
+	if (voice == "" && c.style == fanmixOpts::lyricStr)
+	{
 		voice = fanmixOpts::lyricStr;
 	}
-	if (voice != "" && voice != fanmixOpts::karaStr) {
+	if (voice != "" && voice != fanmixOpts::karaStr)
+	{
 		os << "<v " << voice << ">";
 	}
 	if (c.style == fanmixOpts::lyricStr)

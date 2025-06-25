@@ -32,6 +32,7 @@ public:
 	string track();
 	string artist();
 	string url();
+	bool combined();
 	void setPath(filesystem::path pith);
 	void setPath(string pith);
 	static string pathify(string str);
@@ -40,6 +41,8 @@ public:
 private:
 	string e{"ass"}, n{""}, t{""}, a{""}, u{""}, trackNum{"01"}; // the filename, extension, and then the song title, artist, n url; default extension "ass"
 	filesystem::path p{""};										 // the relative path
+	bool c{false};
+	int m{0};
 };
 
 class subTime // this is basically just an elaborate float from a string. tbh.
