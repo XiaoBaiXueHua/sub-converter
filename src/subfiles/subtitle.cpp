@@ -188,6 +188,50 @@ bool btwnUI(subTime t, pair<subTime, subTime> p)
 
 /* cue */
 
+cue::cue(string l)
+{
+	if (regex_search(l, regex("^Comment:\\s+")))
+	{
+		// if it has "comment" at the start, then well. it's a comment lel
+		cmt = true;
+	}
+	string t{""};
+	int q{0}; // tracks how many comma-separated bits we've had so far
+	stringstream stmp;
+	vector<string> lineInfo = {};
+
+	stmp << regex_replace(l, regex("^\\w+:\\w+"), ""); // get a tmp stringstream without the Comment/Dialogue: bit
+	while (getline(stmp, t, ','))
+	{
+		// read as a csv
+
+		if (q < 10) // ass specification will have this always be 10
+		{
+			// push into vector
+			lineInfo.push_back(t);
+			q++;
+		} else {
+			lineInfo[9] += "," + t; // concatenate dialogue lines with comments and add said commas back in
+		}
+	}
+	while (lineInfo.size() < 10) {
+		// in case we have empty cues for some reason
+		lineInfo.push_back(" "); // add empty strings to it
+	}
+
+	// and save these things
+	layer = stoi(lineInfo[0]);
+	startTime = subTime(lineInfo[1]);
+	endTime = subTime(lineInfo[2]);
+	style = lineInfo[3]; 
+	actor = lineInfo[4];
+	marginL = stoi(lineInfo[5]);
+	marginR = stoi(lineInfo[6]);
+	marginV = stoi(lineInfo[7]);
+	fx = lineInfo[8];
+	dialogue = lineInfo[9];
+}
+
 cue::cue(subTime s, subTime e, string &st, string &f, string &d)
 {
 	// construct it from just the subTimes n string
@@ -202,6 +246,7 @@ bool cue::empty()
 {
 	return regex_search(dialogue, regex("^\\s*$")); // it's empty if it's nothing but spaces
 }
+bool cue::comment() { return cmt; }
 
 void cue::sanitize()
 {
@@ -270,6 +315,14 @@ void cue::sanitize()
 }
 
 string cue::dial() { return dialogue; } // stopgap solution before i eventually fix up the lines vector to work with cues n stuff instead
+
+string cue::print() {
+	// prints it ASS style
+	stringstream os;
+	os << cmt ? "Comment: " : "Dialogue: " << layer << "," << startTime << "," << endTime << "," << style << "," << actor << "," << marginL << "," << marginR << "," << marginV << "," << fx << "," << dialogue;
+	// string d{regex_replace(dialogue, regex)}
+	return os.str(); // hopefully this preserves backslashes. if not, then uhhhhh we'll have to do a replaceAll
+}
 
 // overloaded operator for cue
 ostream &operator<<(ostream &os, const cue &c)

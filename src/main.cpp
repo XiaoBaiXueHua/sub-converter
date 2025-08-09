@@ -446,6 +446,7 @@ void ASStoVTT(subtitle ass)
 		lineInfo.clear();
 		stmp.clear();
 
+		// the lineInfo processing can be replaced with just a constructor in the future, since we can construct these from raw dialogue lines now
 		i = 0; // tracks how many comma-separated things we've parsed so far so that we know when to start concatenating the dialogue strings
 
 		stmp << regex_replace(tmp, regex("^\\w+:\\s+"), ""); // keep tmp as it is for the later regex_search and just write the version w/the "Comment/Dialogue:" bit cleared off straight to the string stream

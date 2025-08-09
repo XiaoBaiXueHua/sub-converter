@@ -87,12 +87,15 @@ bool btwnUI(subTime t, pair<subTime, subTime> p);
 class cue
 {
 public:
-	cue() {}
+	cue() {};
+	cue(string l); // contruct it from nothing but the raw dialogue line. yep.
 	cue(subTime s, subTime e, string &st, string &f, string &d);
 
 	bool empty();
-	void sanitize(); // cleans the dialogue of ass tags
+	bool comment();
+	void sanitize(); // cleans the dialogue of ass tags. this cannot be undone!!
 	string dial();
+	string print();
 	friend ostream &operator<<(ostream &os, const cue &);
 	friend inline bool operator+=(const cue &, const cue &);
 	friend inline bool operator==(const cue &, const cue &);
@@ -105,7 +108,9 @@ public:
 	subTime startTime{0.0}, endTime{0.0}; // has to be public for comparison reasons
 
 protected:
-	string fx{""}, style{""}, dialogue{""};
+	int layer{0}, marginL{0}, marginR{0}, marginV{0};
+	string fx{""}, style{""}, dialogue{""}, actor{""};
+	bool cmt{false}; // by default, they are not considered comments
 };
 
 
