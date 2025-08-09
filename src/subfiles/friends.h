@@ -1,8 +1,13 @@
+#include <iostream>
+#include <iomanip>
+#include <filesystem>
+#include <vector>
+#include <regex>
 #include "options.h"
-#include "subtitle.h"
 using namespace std;
 
 string tupper(string s);
+string toLower(string str);
 bool tf(string s);
 
 void makeDir(string); // make a singular directory
@@ -16,6 +21,10 @@ void configFanmix(); // configure the fanmix
 
 void seeMatches(smatch);
 
-string outStrings(string, subtitle); // function call for making those damn nested file strings
-string outStrings(string, subtitle, string);
-string outStrings(string, subtitle, string, string);
+filesystem::path locator(string fname, string ext);
+
+void quickOpen(fstream &stream, string path);
+void quickOpen(fstream &stream, filesystem::path path);
+
+void showFiles(vector<filesystem::path> &, string);
+void showFiles(vector<filesystem::path> &);

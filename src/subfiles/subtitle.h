@@ -10,13 +10,12 @@
 #include <regex>
 #include <filesystem>
 #include "options.h"
+#include "friends.h"
 
 #ifndef AEGISUBTITLES
 #define AEGISUBTITLES
 
 using namespace std;
-
-string toLower(string str);
 
 class subtitle
 {

@@ -4,17 +4,6 @@
 
 using namespace std;
 
-string toLower(string str)
-{
-	string tmp{""};
-	for (int i{0}; i < str.length(); i++)
-	{
-		char c{char(str[i])};
-		tmp += tolower(c);
-	}
-	return tmp;
-}
-
 /* subtitle */
 subtitle::subtitle(filesystem::path file)
 {

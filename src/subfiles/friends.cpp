@@ -1,4 +1,10 @@
+#include <iostream>
+#include <iomanip>
+#include <filesystem>
+#include <vector>
+#include <regex>
 #include "options.h"
+#include "subtitle.h"
 #include "friends.h"
 
 using namespace std;
@@ -13,6 +19,17 @@ string tupper(string s)
 		u += toupper(c);
 	}
 	return u;
+}
+
+string toLower(string str)
+{
+	string tmp{""};
+	for (int i{0}; i < str.length(); i++)
+	{
+		char c{char(str[i])};
+		tmp += tolower(c);
+	}
+	return tmp;
 }
 
 bool tf(string s)
@@ -269,41 +286,97 @@ void seeMatches(smatch s)
 	cout << endl;
 }
 
-string outStrings(string folder, subtitle sub, string appendum, string prependum) // appendum then prependum bc there's more likely to be smth appended
-{
-	string t{""};
-	if (options::output.string() != "")
+filesystem::path locator(string fname, string ext = options::filetype)
+{ // default look for an .ass file
+	bool found{false};
+	filesystem::path tmpath{""};
+	for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{options::directory}})
 	{
-		// if we have a proper output folder
-		t += options::output.string() + "/";
+		if (!dir_entry.is_directory())
+		{
+			if ((toLower(dir_entry.path().stem().string()) == toLower(fname)) && (toLower(dir_entry.path().extension().string()) == string("." + toLower(ext))))
+			{ // make sure they're both lowercase. just for comparison lol
+				found = true;
+				tmpath = dir_entry.path();
+				cout << "found file: " << tmpath << endl;
+				break; // and also snap out of it lol
+			}
+		}
 	}
 
-	if (folder != "")
+	if (found)
 	{
-		t += folder + "/";
+		return tmpath;
 	}
-
-	if (prependum != "")
+	else
 	{
-		t += prependum + "-";
+		throw new exception;
 	}
-
-	t += sub.name();
-
-	if (appendum != "")
-	{
-		t += "-" + appendum;
-	}
-	// return string(t + ".vtt");
-	return t;
 }
 
-string outStrings(string folder, subtitle sub, string appendum)
+void quickOpen(fstream &stream, string path)
 {
-	return outStrings(folder, sub, appendum, "");
+	stream.open(path);
+	if (!stream.is_open())
+	{
+		stream.clear();
+		stream.open(path, ios::out); // makes the file if it's not already open
+		stream.close();
+		stream.open(path);
+	}
+	cout << "opened " << path << " via string.\n";
+	// quickOpen(stream, path);
 }
-string outStrings(string folder, subtitle sub)
+// overloading for path object types
+void quickOpen(fstream &stream, filesystem::path path)
 {
-	return outStrings(folder, sub, "", "");
+	stream.open(path);
+	if (!stream.is_open())
+	{
+		stream.clear();
+		stream.open(path, ios::out); // makes the file if it's not already open
+		stream.close();
+		stream.open(path);
+	}
+	cout << "opened " << path << " via path.\n";
 }
+
+
+void showFiles(vector<filesystem::path> &paths, string ext) {
+	if (toLower(ext) == "all")
+	{
+		showFiles(paths);
+	}
+	else
+	{
+		int i{1}; // set this to 1
+		cout << setw(15) << 0 << ".\tAll" << endl;
+		paths.clear(); // clears the vector of available files
+		for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{options::directory}})
+		{
+			if (!dir_entry.is_directory())
+			{
+				filesystem::path currPath{dir_entry.path()}; // turn it into a path object
+				// cout << "File type " << currPath.extension() << endl;
+				if (currPath.extension() == string("." + ext))
+				{
+					if (currPath.has_parent_path())
+					{
+						if (!regex_search(currPath.parent_path().string(), regex("drafts"))) // ignore any drafts
+						{
+							cout << setw(15) << i << ". " << currPath << endl;
+							paths.push_back(currPath);
+							i++;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void showFiles(vector<filesystem::path> &paths) {
+	//
+}
+
 //

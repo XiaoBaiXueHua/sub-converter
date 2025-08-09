@@ -7,10 +7,12 @@
 #include <sstream>
 #include <regex>
 #include <filesystem>
-#include "./subfiles/subtitle.h"
-#include "subfiles/subtitle.cpp"
 #include "subfiles/friends.h"
 #include "subfiles/friends.cpp"
+#include "subfiles/subtitle.h"
+#include "subfiles/subtitle.cpp"
+#include "subfiles/sub-friends.h"
+#include "subfiles/sub-friends.cpp"
 #include "subfiles/styler.h"
 #include "subfiles/styler.cpp"
 
@@ -44,9 +46,7 @@ bool miscSwitch{false};
 void showFiles();
 void showFiles(string ext);
 int csvInput(fstream &stream, string fname);
-filesystem::path locator(string fname, string ext);
-void quickOpen(fstream &stream, string path);
-void quickOpen(fstream &stream, filesystem::path path);
+
 void SRTtoVTT(subtitle);
 // void ASStoVTT();
 void ASStoVTT(subtitle);
@@ -134,61 +134,6 @@ int main()
 	return 0;
 }
 
-filesystem::path locator(string fname, string ext = options::filetype)
-{ // default look for an .ass file
-	bool found{false};
-	filesystem::path tmpath{""};
-	for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{directory}})
-	{
-		if (!dir_entry.is_directory())
-		{
-			if ((toLower(dir_entry.path().stem().string()) == toLower(fname)) && (toLower(dir_entry.path().extension().string()) == string("." + toLower(ext))))
-			{ // make sure they're both lowercase. just for comparison lol
-				found = true;
-				tmpath = dir_entry.path();
-				cout << "found file: " << tmpath << endl;
-				break; // and also snap out of it lol
-			}
-		}
-	}
-
-	if (found)
-	{
-		return tmpath;
-	}
-	else
-	{
-		throw new exception;
-	}
-}
-
-void quickOpen(fstream &stream, string path)
-{
-	stream.open(path);
-	if (!stream.is_open())
-	{
-		stream.clear();
-		stream.open(path, ios::out); // makes the file if it's not already open
-		stream.close();
-		stream.open(path);
-	}
-	cout << "opened " << path << " via string.\n";
-	// quickOpen(stream, path);
-}
-// overloading for path object types
-void quickOpen(fstream &stream, filesystem::path path)
-{
-	stream.open(path);
-	if (!stream.is_open())
-	{
-		stream.clear();
-		stream.open(path, ios::out); // makes the file if it's not already open
-		stream.close();
-		stream.open(path);
-	}
-	cout << "opened " << path << " via path.\n";
-}
-
 void showFiles()
 {
 	int i{1};
@@ -211,36 +156,7 @@ void showFiles()
 
 void showFiles(string ext) // default are .ass files
 {
-	if (toLower(ext) == "all")
-	{
-		showFiles();
-	}
-	else
-	{
-		i = 1; // set this to 1
-		cout << setw(15) << 0 << ".\tAll" << endl;
-		available.clear(); // clears the vector of available files
-		for (auto const &dir_entry : filesystem::recursive_directory_iterator{filesystem::directory_entry{directory}})
-		{
-			if (!dir_entry.is_directory())
-			{
-				filesystem::path currPath{dir_entry.path()}; // turn it into a path object
-				// cout << "File type " << currPath.extension() << endl;
-				if (currPath.extension() == string("." + ext))
-				{
-					if (currPath.has_parent_path())
-					{
-						if (!regex_search(currPath.parent_path().string(), regex("drafts"))) // ignore any drafts
-						{
-							cout << setw(15) << i << ". " << currPath << endl;
-							available.push_back(currPath);
-							i++;
-						}
-					}
-				}
-			}
-		}
-	}
+	showFiles(available, ext); // version declared in friends.cpp
 }
 
 int csvInput(fstream &stream, string fname)
@@ -795,7 +711,7 @@ void ASStoVTT(subtitle ass)
 			// lyney and the lyrics
 			if (options::gaps)
 			{
-				if (!fanmixOpts::combine)
+				if (!fanmixOpts::combine) // at some point later, separate this out blahblahblah
 				{
 					ostr << "cue-Lyr" << i << "-Anno" << j << endl; // make an option to change these cue things at some point
 				}
