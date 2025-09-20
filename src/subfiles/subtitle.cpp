@@ -316,6 +316,10 @@ void cue::sanitize()
 
 string cue::dial() { return dialogue; } // stopgap solution before i eventually fix up the lines vector to work with cues n stuff instead
 
+string cue::effect() { return fx; } // gets the effect
+
+string cue::s() { return style; } // gets the style
+
 string cue::print() {
 	// prints it ASS style
 	stringstream os;
@@ -329,24 +333,27 @@ ostream &operator<<(ostream &os, const cue &c)
 {
 	// we'll have to make an options/settings static class for this later but for now just whatever hardcode it
 	string voice{c.fx};
-	if (voice == "" && c.style == fanmixOpts::lyricStr)
+	if ((voice == "") && (c.style == fanmixOpts::lyricStr))  // only do these if we're like. Suppooooosed to
+	// if ((voice == "") && (c.style == fanmixOpts::lyricStr) && cue::lyrics)  // only do these if we're like. Suppooooosed to
 	{
 		voice = fanmixOpts::lyricStr;
 	}
-	if (voice != "" && voice != fanmixOpts::karaStr)
+	if ((voice != "") && (voice != fanmixOpts::karaStr))
 	{
 		os << "<v " << voice << ">";
 	}
-	if (c.style == fanmixOpts::lyricStr)
+	if ((c.style == fanmixOpts::lyricStr))
+	// if ((c.style == fanmixOpts::lyricStr) && cue::lyrics) // only do these if we're like. Suppooooosed to
 	{
 		os << "♪♫ (";
 	}
 	os << c.dialogue;
-	if (c.style == fanmixOpts::lyricStr)
+	if ((c.style == fanmixOpts::lyricStr))
+	// if ((c.style == fanmixOpts::lyricStr) && cue::lyrics) // only do these if we're like. Suppooooosed to
 	{
 		os << ") ♫♪";
 	}
-	if (voice != "" && voice != fanmixOpts::karaStr)
+	if ((voice != "") && (voice != fanmixOpts::karaStr))
 	{
 		os << "</v>";
 	}

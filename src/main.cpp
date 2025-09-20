@@ -35,7 +35,7 @@ vector<string> lineInfo{};				   // a vector for strings
 
 pair<subTime, subTime> timestamps;
 cue freminet; // so. it's the pair of timestamps, the style, the effects, and the line string
-vector<cue> lyney, lynette;
+vector<cue> lyney, lynette, lyntwins;
 vector<stylesheet> styles{};
 
 int i{1}, j{0}, k{0}; // our beloved three random job integers
@@ -429,13 +429,14 @@ void ASStoVTT(subtitle ass)
 	}
 
 	getline(istr, tmp); // now we get the line After, which is just the "Format: whatever,whatever,whatever" thing. which we don't need here, so the lines after have been removed
-
+	lyntwins.clear();
 	lines.clear();											// clear this out of whatever it was used for last
 	const int formats = 10;									// ASS specification will have this always be 10
 	subTime startTime{"0:00:00.00"}, endTime{"0:00:00.00"}; // get these from the cue-gap comments
 
 	miscSwitch = true; // thinking abt it, could probably reuse this elsewhere, since it only gets used that one time
 	bool lyricLine{false}, moreLines{false}, kara{false};
+	// cue::lyrics = false; // reset this
 	string fx{""};
 	set<subTime> times{};
 
@@ -486,13 +487,15 @@ void ASStoVTT(subtitle ass)
 			(lineInfo[3] == fanmixOpts::lyricStr) ? lyney.push_back(freminet) : lynette.push_back(freminet); // lyney has lyrics; lynette has annotations
 
 			// as <lines> is just a vector of strings
-			lines.push_back(lineInfo); // add the line to the vector
+			lyntwins.push_back(freminet); // add the line to the vector
 		}
 	}
 
 	bool karaMode{false}; // a boolean to track if we're in karaoke mode
 	subTime startCue, endCue;
 	// now for the fanmix stuff, we make these other files by going through the lines vector
+	cue prevLine, nextLine; // ugh but. i guess it seems i need another vector for the previous line too!!!
+	cout << "lyntwins.size(): " << lyntwins.size() << endl;
 	if (options::split)
 	{
 		// now we loop through that 2d vector
@@ -500,25 +503,26 @@ void ASStoVTT(subtitle ass)
 		j = 0; // j tracks the gaps
 		k = 0; // k tracks the karaoke
 
-		vector<string> prevLine{""}; // ugh but. i guess it seems i need another vector for the previous line too!!!
+		// cue::lyrics = true; // and now also turn this back on
 
-		for (int line{0}; line < lines.size(); line++)
+		for (int line{0}; line < lyntwins.size(); line++)
 		{
 			// cout << "line " << line << endl;
 			tmp = "";				// clear this out
-			lineInfo = lines[line]; // i'm not setting aside more memory for a new vector. why would i do that.
-			fx = lineInfo[8];
+			freminet = lyntwins[line]; // i'm not setting aside more memory for a new vector. why would i do that.
+			cout << "printing line: " << line << ". ";
+			fx = freminet.effect();
 			// string fx{lineInfo[8]};		 // we'll always be working with these, so we can just define them i guess
-			startCue = lineInfo[1], endCue = lineInfo[2];
+			startCue = freminet.startTime, endCue = freminet.endTime;
 			// um. don't forget to fill out the times set lol
-			lyricLine = (lineInfo[3] == fanmixOpts::lyricStr), moreLines = (line < lines.size() - 1), kara = (fx == fanmixOpts::karaStr);
+			lyricLine = (freminet.s() == fanmixOpts::lyricStr), moreLines = (line < lyntwins.size() - 1), kara = (fx == fanmixOpts::karaStr);
 
 			if (line > 0) // only do this when i > 1 is to make sure we're not forming some sort of gap btwn the last lyric line and the first commentary line lol
 			{
 
-				prevLine = lines[line - 1];	   // if we can do this...
-				string prevStyle{prevLine[3]}; // then we should also be able to get this info as well
-				subTime prevEnd{prevLine[2]};
+				prevLine = lyntwins[line - 1];	   // if we can do this...
+				string prevStyle{prevLine.s()}; // then we should also be able to get this info as well
+				subTime prevEnd{prevLine.endTime};
 				// bool ;
 
 				if (prevEnd != startCue || (prevStyle == fanmixOpts::lyricStr && startCue >= 0)) // if we're working with non-continuous subs OR we go from the lyrics to the annotations
@@ -550,6 +554,10 @@ void ASStoVTT(subtitle ass)
 					}
 				}
 			}
+			if (moreLines) {
+				// if there are more cues
+				nextLine = lyntwins[line + 1];
+			}
 			// annotations lines should only be past the first line anyway, but anyway
 			if (!lyricLine) // only cue up the commentary files for annotation seeking
 			{
@@ -566,7 +574,7 @@ void ASStoVTT(subtitle ass)
 						// }
 						k++;
 					}
-					else if (prevLine[8] == fanmixOpts::karaStr) // we won't get any errors on this bc we set the prevLine in the last line > 0 thing
+					else if (prevLine.effect() == fanmixOpts::karaStr) // we won't get any errors on this bc we set the prevLine in the last line > 0 thing
 					{
 						k = 0; // reset k, but only if we just got off a karaoke line
 					}
@@ -574,11 +582,11 @@ void ASStoVTT(subtitle ass)
 
 				if (moreLines)
 				{
-					if (lines[line + 1][8] != fanmixOpts::karaStr)
+					if (nextLine.effect() != fanmixOpts::karaStr)
 					{
 						i++; // increment only if the next line isn't a kara line
 					}
-					else if (lines[line + 1][8] == fanmixOpts::karaStr) // we can only be doing karaoke mode if there are y'know, future lines to karaoke anyway...
+					else if (nextLine.effect() == fanmixOpts::karaStr) // we can only be doing karaoke mode if there are y'know, future lines to karaoke anyway...
 					{
 						karaMode = true; // don't switch this off until later
 					}
@@ -594,8 +602,8 @@ void ASStoVTT(subtitle ass)
 			}
 
 			(lyricLine ? ostr : cstr) << startCue << " --> " << endCue << endl; // timing. requires an extra 0 at the end, though preceeding 0's are fine and whatever
-			tmp = lineInfo[9];
-			(lyricLine ? ostr : cstr) << tmp << endl
+			// tmp = lineInfo[9];
+			(lyricLine ? ostr : cstr) << freminet << endl
 									  << endl; // text
 
 			// now again, only want to do this to the commentary, non-lyric lines
@@ -613,7 +621,7 @@ void ASStoVTT(subtitle ass)
 				{
 					if (moreLines)
 					{
-						if (lines[line + 1][8] != fanmixOpts::karaStr)
+						if (nextLine.effect() != fanmixOpts::karaStr)
 						{
 							// if the next one is not a karaoke line
 							karaMode = false;
@@ -642,7 +650,7 @@ void ASStoVTT(subtitle ass)
 				}
 			}
 
-			if (line == (lines.size() - 1) && !lyricLine && endCue < subTime(endTime))
+			if (line == (lyntwins.size() - 1) && !lyricLine && endCue < subTime(endTime))
 			{
 				// if we're on the last one, then add the empty gap line for the last empty bits too
 				cstr << "gap-" << j << endl;
@@ -747,6 +755,7 @@ void ASStoVTT(subtitle ass)
 		// clear these vectors
 		lyney.clear();
 		lynette.clear();
+		lyntwins.clear();
 		// close the outstream
 		ostr.close();
 	}

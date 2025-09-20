@@ -95,6 +95,8 @@ public:
 	bool comment();
 	void sanitize(); // cleans the dialogue of ass tags. this cannot be undone!!
 	string dial();
+	string effect();
+	string s();
 	string print();
 	friend ostream &operator<<(ostream &os, const cue &);
 	friend inline bool operator+=(const cue &, const cue &);
@@ -107,11 +109,14 @@ public:
 	// friend class vector<cue>;
 	subTime startTime{0.0}, endTime{0.0}; // has to be public for comparison reasons
 
+	// static bool lyrics; // bool to control whether we print the voice n music notes for the lyrics
+
 protected:
 	int layer{0}, marginL{0}, marginR{0}, marginV{0};
 	string fx{""}, style{""}, dialogue{""}, actor{""};
 	bool cmt{false}; // by default, they are not considered comments
 };
 
+// bool cue::lyrics = false; 
 
 #endif
